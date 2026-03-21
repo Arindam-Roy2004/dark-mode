@@ -80,9 +80,5 @@ chrome.runtime.onMessage.addListener((message: MessagePayload, _sender, sendResp
   return true; // Keep channel open for async responses
 });
 
-// Run on load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initialize);
-} else {
-  initialize();
-}
+// Run immediately for zero-flash dark mode
+initialize();
