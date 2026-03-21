@@ -12,7 +12,7 @@ i have faced issues where i constantly need to spend time to find how to switch 
 - **Theme Overlays**: uses shadow dom to inject glowing radial gradients without breaking site layouts
 - **Classic Theme**: includes the default dark reader theme if u just want the basic look
 - **Per-Site Settings**: remembers the specific theme, brightness, contrast, and sepia u set for each domain
-- **Keyboard Shortcut**: simply press `Alt+Shift+D` (or `Command+Shift+D` on Mac) to instantly toggle dark mode on/off anywhere
+- **Keyboard Shortcut**: simply press `Alt+Shift+D` (or `Option+Shift+D` on Mac) to instantly toggle dark mode on/off anywhere
 
 ## tech
 - react + webpack

@@ -31,7 +31,7 @@
     "toggle-dark-mode": {
       "suggested_key": {
         "default": "Alt+Shift+D",
-        "mac": "Command+Shift+D"
+        "mac": "Alt+Shift+D"
       },
       "description": "Toggle Dark Mode"
     }
