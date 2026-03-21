@@ -10,6 +10,7 @@ export interface Theme {
   name: string;
   description: string;
   background: string;
+  textColor?: string;
   overlay: string;
   previewGradient: string;
 }

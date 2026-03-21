@@ -65,6 +65,15 @@ export const themes: Theme[] = [
     overlay: `radial-gradient(ellipse 70% 70% at 50% 50%, rgba(20, 184, 166, 0.08) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 60%)`,
     previewGradient: 'radial-gradient(circle, rgba(20,184,166,0.2) 0%, #020617 70%)',
   },
+  {
+    id: 'darkreader-classic',
+    name: 'DR Classic',
+    description: 'The authentic Dark Reader extension default theme',
+    background: '#181a1b',
+    textColor: '#e8e6e3',
+    overlay: 'none',
+    previewGradient: 'linear-gradient(135deg, #2b2e30 0%, #181a1b 100%)',
+  },
 ];
 
 export function getThemeById(id: string): Theme {
