@@ -25,7 +25,7 @@ chrome.commands.onCommand.addListener(async (command) => {
     chrome.tabs.sendMessage(tab.id, message);
 
     // Persist the change
-    chrome.storage.sync.set({
+    chrome.storage.local.set({
       [domain]: { ...siteSettings, enabled: newEnabled },
     });
   }
@@ -34,7 +34,7 @@ chrome.commands.onCommand.addListener(async (command) => {
 // Handle extension install
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
-    chrome.storage.sync.set({
+    chrome.storage.local.set({
       '__dark_mode_global__': {
         enabled: true,
         defaultThemeId: 'aurora-edge',
