@@ -1,0 +1,72 @@
+import { Theme } from '../utils/types';
+
+export const themes: Theme[] = [
+  {
+    id: 'aurora-edge',
+    name: 'Aurora Edge',
+    description: 'Subtle aurora glow from the top-left corner',
+    background: '#000000',
+    overlay: `radial-gradient(ellipse 50% 100% at 10% 0%, rgba(226, 232, 240, 0.15), transparent 65%)`,
+    previewGradient: 'linear-gradient(135deg, rgba(226,232,240,0.2) 0%, #000 60%)',
+  },
+  {
+    id: 'midnight-radial',
+    name: 'Midnight Radial',
+    description: 'Centered radial glow for a deep midnight feel',
+    background: '#000000',
+    overlay: `radial-gradient(circle at 50% 50%, rgba(226, 232, 240, 0.2) 0%, rgba(226, 232, 240, 0.1) 25%, rgba(226, 232, 240, 0.05) 35%, transparent 50%)`,
+    previewGradient: 'radial-gradient(circle, rgba(226,232,240,0.25) 0%, #000 70%)',
+  },
+  {
+    id: 'blue-spotlight',
+    name: 'Blue Spotlight',
+    description: 'Cool blue center spotlight effect',
+    background: '#000000',
+    overlay: `radial-gradient(circle at center, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.06) 20%, rgba(0, 0, 0, 0.0) 60%)`,
+    previewGradient: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, #000 70%)',
+  },
+  {
+    id: 'deep-void',
+    name: 'Deep Void',
+    description: 'Pure black — absolute darkness',
+    background: '#000000',
+    overlay: 'none',
+    previewGradient: 'linear-gradient(135deg, #111 0%, #000 100%)',
+  },
+  {
+    id: 'warm-ember',
+    name: 'Warm Ember',
+    description: 'Warm amber glow from the bottom',
+    background: '#0a0a0a',
+    overlay: `radial-gradient(ellipse 80% 50% at 50% 100%, rgba(251, 146, 60, 0.08) 0%, transparent 70%)`,
+    previewGradient: 'linear-gradient(0deg, rgba(251,146,60,0.2) 0%, #0a0a0a 70%)',
+  },
+  {
+    id: 'neon-pulse',
+    name: 'Neon Pulse',
+    description: 'Vibrant purple & cyan neon accents',
+    background: '#050510',
+    overlay: `radial-gradient(ellipse 60% 60% at 20% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 80% 20%, rgba(34, 211, 238, 0.08) 0%, transparent 60%)`,
+    previewGradient: 'linear-gradient(135deg, rgba(168,85,247,0.25) 0%, #050510 50%, rgba(34,211,238,0.2) 100%)',
+  },
+  {
+    id: 'cosmic-dust',
+    name: 'Cosmic Dust',
+    description: 'Subtle starfield-like scattered glow',
+    background: '#030308',
+    overlay: `radial-gradient(circle at 25% 25%, rgba(148, 163, 184, 0.06) 0%, transparent 30%), radial-gradient(circle at 75% 60%, rgba(148, 163, 184, 0.05) 0%, transparent 25%), radial-gradient(circle at 50% 80%, rgba(148, 163, 184, 0.04) 0%, transparent 35%)`,
+    previewGradient: 'radial-gradient(circle at 30% 30%, rgba(148,163,184,0.15) 0%, #030308 50%)',
+  },
+  {
+    id: 'ocean-depth',
+    name: 'Ocean Depth',
+    description: 'Deep navy with teal center glow',
+    background: '#020617',
+    overlay: `radial-gradient(ellipse 70% 70% at 50% 50%, rgba(20, 184, 166, 0.08) 0%, rgba(6, 182, 212, 0.04) 30%, transparent 60%)`,
+    previewGradient: 'radial-gradient(circle, rgba(20,184,166,0.2) 0%, #020617 70%)',
+  },
+];
+
+export function getThemeById(id: string): Theme {
+  return themes.find((t) => t.id === id) || themes[0];
+}
