@@ -6,7 +6,7 @@ const domain = window.location.hostname;
 
 // Initialize: check stored settings on load
 function initialize(): void {
-  chrome.storage.sync.get([domain, '__dark_mode_global__'], (result) => {
+  chrome.storage.local.get([domain, '__dark_mode_global__'], (result) => {
     const globalSettings = result['__dark_mode_global__'];
     const siteSettings: SiteSettings = result[domain] || { ...DEFAULT_SITE_SETTINGS };
 

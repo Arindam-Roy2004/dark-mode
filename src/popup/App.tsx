@@ -20,7 +20,7 @@ const App: React.FC = () => {
         const host = new URL(tab.url).hostname;
         setDomain(host);
 
-        chrome.storage.sync.get([host, '__dark_mode_global__'], (result) => {
+        chrome.storage.local.get([host, '__dark_mode_global__'], (result) => {
           const global: GlobalSettings = result['__dark_mode_global__'] || { ...DEFAULT_GLOBAL_SETTINGS };
           const site: SiteSettings = result[host] || { ...DEFAULT_SITE_SETTINGS };
           setGlobalEnabled(global.enabled);
@@ -35,14 +35,16 @@ const App: React.FC = () => {
   // Send message to content script
   const sendMessage = useCallback((msg: MessagePayload) => {
     if (tabId) {
-      chrome.tabs.sendMessage(tabId, msg);
+      chrome.tabs.sendMessage(tabId, msg).catch((err) => {
+        console.warn('Could not send message to tab. It might not be loaded yet.', err);
+      });
     }
   }, [tabId]);
 
   // Persist + send
   const updateAndPersist = useCallback((newSettings: SiteSettings) => {
     setSiteSettings(newSettings);
-    chrome.storage.sync.set({ [domain]: newSettings });
+    chrome.storage.local.set({ [domain]: newSettings });
     sendMessage({
       type: 'UPDATE_SETTINGS',
       settings: newSettings,
@@ -65,7 +67,7 @@ const App: React.FC = () => {
   const handleGlobalToggle = () => {
     const newGlobal = !globalEnabled;
     setGlobalEnabled(newGlobal);
-    chrome.storage.sync.set({
+    chrome.storage.local.set({
       '__dark_mode_global__': {
         ...DEFAULT_GLOBAL_SETTINGS,
         enabled: newGlobal,
