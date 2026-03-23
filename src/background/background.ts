@@ -7,7 +7,13 @@ chrome.commands.onCommand.addListener(async (command) => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id || !tab.url) return;
 
-    const domain = new URL(tab.url).hostname;
+    let domain: string;
+    try {
+      domain = new URL(tab.url).hostname;
+    } catch {
+      return; // Non-parseable URL (chrome://, about:blank, etc.)
+    }
+    if (!domain) return;
     const siteSettings = await getSiteSettings(domain);
     const globalSettings = await getGlobalSettings();
 
@@ -22,7 +28,9 @@ chrome.commands.onCommand.addListener(async (command) => {
       settings: { ...siteSettings, enabled: newEnabled },
     };
 
-    chrome.tabs.sendMessage(tab.id, message);
+    chrome.tabs.sendMessage(tab.id, message).catch(() => {
+      // Content script not available on this tab — ignore silently
+    });
 
     // Persist the change
     chrome.storage.local.set({

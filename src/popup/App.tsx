@@ -27,7 +27,7 @@ const App: React.FC = () => {
           setSiteSettings(site);
         });
       } catch {
-        setDomain('unknown');
+        setDomain('');  // Empty string = unsupported page
       }
     });
   }, []);
@@ -44,7 +44,9 @@ const App: React.FC = () => {
   // Persist + send
   const updateAndPersist = useCallback((newSettings: SiteSettings) => {
     setSiteSettings(newSettings);
-    chrome.storage.local.set({ [domain]: newSettings });
+    if (domain) {
+      chrome.storage.local.set({ [domain]: newSettings });
+    }
     sendMessage({
       type: 'UPDATE_SETTINGS',
       settings: newSettings,
@@ -73,9 +75,20 @@ const App: React.FC = () => {
         enabled: newGlobal,
       },
     });
-    if (!newGlobal && siteSettings.enabled) {
-      const newSettings = { ...siteSettings, enabled: false };
-      updateAndPersist(newSettings);
+    // When turning OFF globally: send a disable message to the content script
+    // but do NOT overwrite the per-site stored enabled state.
+    if (!newGlobal) {
+      sendMessage({ type: 'TOGGLE_DARK_MODE', enabled: false, settings: { ...siteSettings, enabled: false } });
+      if (tabId) {
+        chrome.action.setBadgeText({ text: '', tabId });
+      }
+    } else if (siteSettings.enabled) {
+      // Re-enable: restore previous per-site state
+      sendMessage({ type: 'UPDATE_SETTINGS', settings: siteSettings });
+      if (tabId) {
+        chrome.action.setBadgeText({ text: 'ON', tabId });
+        chrome.action.setBadgeBackgroundColor({ color: '#3b82f6', tabId });
+      }
     }
   };
 
@@ -110,6 +123,13 @@ const App: React.FC = () => {
     <div className="popup-container">
       {/* Ambient Background */}
       <div className="ambient-bg" />
+
+      {/* Unsupported page notice */}
+      {!domain && (
+        <div className="unsupported-notice">
+          <span>⚠️ Dark mode is not available on this page.</span>
+        </div>
+      )}
 
       {/* Header */}
       <header className="popup-header">
