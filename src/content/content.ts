@@ -1,4 +1,4 @@
-import { MessagePayload, SiteSettings, DEFAULT_SITE_SETTINGS } from '../utils/types';
+import { MessagePayload, SiteSettings, DEFAULT_SITE_SETTINGS, EXCLUDES_KEY } from '../utils/types';
 import { enable, disable, setTheme, updateSettings, isActive, getCurrentThemeId } from './darkModeEngine';
 
 // Domain for this page
@@ -6,12 +6,27 @@ const domain = window.location.hostname;
 
 // Initialize: check stored settings on load
 function initialize(): void {
-  chrome.storage.local.get([domain, '__dark_mode_global__'], (result) => {
+  chrome.storage.local.get([domain, '__dark_mode_global__', EXCLUDES_KEY], (result) => {
     const globalSettings = result['__dark_mode_global__'];
     const siteSettings: SiteSettings = result[domain] || { ...DEFAULT_SITE_SETTINGS };
+    const excludes: string[] = result[EXCLUDES_KEY] || [];
 
     // If global is disabled, don't apply
     if (globalSettings && globalSettings.enabled === false) return;
+
+    // If domain is in exclude list, don't apply
+    if (excludes.length > 0) {
+      const d = domain.toLowerCase();
+      const isExcluded = excludes.some((pattern: string) => {
+        if (pattern === d) return true;
+        const escaped = pattern
+          .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+          .replace(/\\\*/g, '\\*');
+        const regex = new RegExp('^' + escaped.replace(/\*/g, '.*') + '$');
+        return regex.test(d);
+      });
+      if (isExcluded) return;
+    }
 
     // If site is enabled, apply dark mode
     if (siteSettings.enabled) {

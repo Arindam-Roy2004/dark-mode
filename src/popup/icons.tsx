@@ -87,3 +87,32 @@ export const CheckIcon: React.FC<IconProps> = ({ size = 14, color = 'currentColo
     <path d="M5 12l5 5L20 7" />
   </svg>
 );
+
+// Shield icon (for exclude list)
+export const ShieldIcon: React.FC<IconProps> = ({ size = 14, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
+// X icon (for removing items)
+export const XIcon: React.FC<IconProps> = ({ size = 14, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" className={className}>
+    <path d="M18 6L6 18M6 6l12 12" />
+  </svg>
+);
+
+// Plus icon (for adding items)
+export const PlusIcon: React.FC<IconProps> = ({ size = 14, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" className={className}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+// Clock icon (for emergency disable timer)
+export const ClockIcon: React.FC<IconProps> = ({ size = 14, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 6v6l4 2" />
+  </svg>
+);

@@ -3,7 +3,7 @@
   "name": "Dark Mode Switcher",
   "version": "1.0.0",
   "description": "Toggle dark mode on any website with premium themes — Aurora, Midnight, Blue Spotlight & more",
-  "permissions": ["activeTab", "storage", "scripting"],
+  "permissions": ["activeTab", "storage", "scripting", "alarms"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
