@@ -74,6 +74,33 @@ export const themes: Theme[] = [
     overlay: 'none',
     previewGradient: 'linear-gradient(135deg, #2b2e30 0%, #181a1b 100%)',
   },
+  {
+    id: 'night-owl',
+    name: 'Night Owl',
+    description: 'A dark theme for night owls (Inspired by sdras)',
+    background: '#011627',
+    textColor: '#d6deeb',
+    overlay: 'radial-gradient(ellipse 70% 70% at 50% 50%, rgba(130, 170, 255, 0.08) 0%, rgba(199, 146, 234, 0.04) 30%, transparent 60%)',
+    previewGradient: 'radial-gradient(circle, rgba(130,170,255,0.2) 0%, #011627 70%)',
+  },
+  {
+    id: 'vantablack',
+    name: 'Vantablack',
+    description: 'Monochrome dark theme (Inspired by Bjarneo)',
+    background: '#0d0d0d',
+    textColor: '#ffffff',
+    overlay: 'none',
+    previewGradient: 'linear-gradient(135deg, #2a2a2a 0%, #0d0d0d 100%)',
+  },
+  {
+    id: 'claude-code-dark',
+    name: 'Claude Code',
+    description: 'Warm, balanced dark theme (Inspired by Claude)',
+    background: '#141413',
+    textColor: '#EAE7DF',
+    overlay: 'radial-gradient(ellipse 60% 60% at 50% 0%, rgba(201, 100, 66, 0.08) 0%, transparent 70%)',
+    previewGradient: 'linear-gradient(135deg, rgba(201,100,66,0.15) 0%, #141413 70%)',
+  },
 ];
 
 export function getThemeById(id: string): Theme {
