@@ -170,7 +170,7 @@ const App: React.FC = () => {
 
   // Theme selection
   const handleThemeSelect = (themeId: string) => {
-    const newSettings = { ...siteSettings, themeId, enabled: true };
+    const newSettings = { ...siteSettings, themeId };
     updateAndPersist(newSettings);
   };
 
@@ -239,6 +239,15 @@ const App: React.FC = () => {
     });
   };
 
+  const handleCancelTempDisable = () => {
+    chrome.runtime.sendMessage({ type: 'TEMP_DISABLE_CANCEL' } as MessagePayload, (response) => {
+      if (response?.success) {
+        setTempDisabled(false);
+        setTempRemainingMs(0);
+      }
+    });
+  };
+
   const truncateDomain = (d: string) => {
     if (d.length > 28) return d.substring(0, 25) + '...';
     return d;
@@ -283,6 +292,13 @@ const App: React.FC = () => {
         <div className="temp-disable-notice">
           <ClockIcon size={14} />
           <span>Temporarily disabled — re-enables in {formatTime(tempRemainingMs)}</span>
+          <button
+            className="temp-cancel-btn"
+            onClick={handleCancelTempDisable}
+            title="Re-enable dark mode now"
+          >
+            Re-enable now
+          </button>
         </div>
       )}
 

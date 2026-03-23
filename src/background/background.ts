@@ -194,6 +194,50 @@ chrome.runtime.onMessage.addListener((message: MessagePayload, sender, sendRespo
 
     return true; // Keep channel open for async
   }
+
+  if (message.type === 'TEMP_DISABLE_CANCEL') {
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      const tab = tabs[0];
+      if (!tab?.id) {
+        sendResponse({ success: false });
+        return;
+      }
+
+      const tabId = tab.id;
+      const alarmName = `${TEMP_DISABLE_PREFIX}${tabId}`;
+
+      // Clear the alarm and remove from tracking
+      chrome.alarms.clear(alarmName);
+      tempDisabledTabs.delete(tabId);
+
+      // Re-enable dark mode
+      try {
+        if (tab.url) {
+          const domain = new URL(tab.url).hostname;
+          const siteSettings = await getSiteSettings(domain);
+          const globalSettings = await getGlobalSettings();
+
+          if (globalSettings.enabled && siteSettings.enabled) {
+            chrome.tabs.sendMessage(tabId, {
+              type: 'UPDATE_SETTINGS',
+              settings: siteSettings,
+            } as MessagePayload).catch(() => {});
+
+            chrome.action.setBadgeText({ text: 'ON', tabId });
+            chrome.action.setBadgeBackgroundColor({ color: '#3b82f6', tabId });
+          } else {
+            chrome.action.setBadgeText({ text: '', tabId });
+          }
+        }
+      } catch {
+        // Ignore URL parse errors
+      }
+
+      sendResponse({ success: true });
+    });
+
+    return true; // Keep channel open for async
+  }
 });
 
 // Clean up temp-disable entries when tabs are closed

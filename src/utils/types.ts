@@ -32,7 +32,7 @@ export interface GlobalSettings {
 }
 
 export interface MessagePayload {
-  type: 'TOGGLE_DARK_MODE' | 'SET_THEME' | 'UPDATE_SETTINGS' | 'GET_STATUS' | 'STATUS_RESPONSE' | 'TEMP_DISABLE' | 'TEMP_DISABLE_STATUS';
+  type: 'TOGGLE_DARK_MODE' | 'SET_THEME' | 'UPDATE_SETTINGS' | 'GET_STATUS' | 'STATUS_RESPONSE' | 'TEMP_DISABLE' | 'TEMP_DISABLE_STATUS' | 'TEMP_DISABLE_CANCEL';
   enabled?: boolean;
   themeId?: string;
   settings?: SiteSettings;
