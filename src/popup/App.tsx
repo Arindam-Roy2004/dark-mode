@@ -1,13 +1,40 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { themes } from '../content/themes';
-import { SiteSettings, GlobalSettings, DEFAULT_SITE_SETTINGS, DEFAULT_GLOBAL_SETTINGS, MessagePayload } from '../utils/types';
-import { SunIcon, MoonIcon, PowerIcon, GlobeIcon, GridIcon, SlidersIcon, CheckIcon } from './icons';
+import { SiteSettings, GlobalSettings, DEFAULT_SITE_SETTINGS, DEFAULT_GLOBAL_SETTINGS, MessagePayload, EXCLUDES_KEY } from '../utils/types';
+import { SunIcon, MoonIcon, PowerIcon, GlobeIcon, GridIcon, SlidersIcon, CheckIcon, ShieldIcon, XIcon, PlusIcon, ClockIcon } from './icons';
+
+// ---- Debounce hook ----
+function useDebounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fnRef = useRef(fn);
+  fnRef.current = fn;
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  return useCallback((...args: any[]) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => fnRef.current(...args), delay);
+  }, [delay]) as unknown as T;
+}
 
 const App: React.FC = () => {
   const [domain, setDomain] = useState<string>('');
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({ ...DEFAULT_SITE_SETTINGS });
   const [globalEnabled, setGlobalEnabled] = useState<boolean>(true);
   const [tabId, setTabId] = useState<number | null>(null);
+
+  // Exclude list state
+  const [excludeList, setExcludeList] = useState<string[]>([]);
+  const [excludeInput, setExcludeInput] = useState('');
+  const [isExcluded, setIsExcluded] = useState(false);
+
+  // Emergency disable state
+  const [tempDisabled, setTempDisabled] = useState(false);
+  const [tempRemainingMs, setTempRemainingMs] = useState(0);
 
   // Load settings on mount
   useEffect(() => {
@@ -20,17 +47,58 @@ const App: React.FC = () => {
         const host = new URL(tab.url).hostname;
         setDomain(host);
 
-        chrome.storage.local.get([host, '__dark_mode_global__'], (result) => {
+        chrome.storage.local.get([host, '__dark_mode_global__', EXCLUDES_KEY], (result) => {
           const global: GlobalSettings = result['__dark_mode_global__'] || { ...DEFAULT_GLOBAL_SETTINGS };
           const site: SiteSettings = result[host] || { ...DEFAULT_SITE_SETTINGS };
+          const excludes: string[] = result[EXCLUDES_KEY] || [];
           setGlobalEnabled(global.enabled);
           setSiteSettings(site);
+          setExcludeList(excludes);
+
+          // Check if current domain is excluded
+          const d = host.toLowerCase();
+          const excluded = excludes.some((pattern) => {
+            if (pattern === d) return true;
+            const escaped = pattern
+              .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+              .replace(/\\\*/g, '\\*');
+            const regex = new RegExp('^' + escaped.replace(/\*/g, '.*') + '$');
+            return regex.test(d);
+          });
+          setIsExcluded(excluded);
+        });
+
+        // Check temp-disable status
+        chrome.runtime.sendMessage({ type: 'TEMP_DISABLE_STATUS' } as MessagePayload, (response) => {
+          if (response?.tempDisabled) {
+            setTempDisabled(true);
+            setTempRemainingMs(response.remainingMs || 0);
+          }
         });
       } catch {
         setDomain('');  // Empty string = unsupported page
       }
     });
   }, []);
+
+  // Countdown timer for temp-disable
+  useEffect(() => {
+    if (!tempDisabled || tempRemainingMs <= 0) return;
+
+    const interval = setInterval(() => {
+      setTempRemainingMs((prev) => {
+        const next = prev - 1000;
+        if (next <= 0) {
+          clearInterval(interval);
+          setTempDisabled(false);
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [tempDisabled, tempRemainingMs]);
 
   // Send message to content script
   const sendMessage = useCallback((msg: MessagePayload) => {
@@ -41,9 +109,8 @@ const App: React.FC = () => {
     }
   }, [tabId]);
 
-  // Persist + send
-  const updateAndPersist = useCallback((newSettings: SiteSettings) => {
-    setSiteSettings(newSettings);
+  // Persist + send (used for non-slider changes)
+  const persistAndSend = useCallback((newSettings: SiteSettings) => {
     if (domain) {
       chrome.storage.local.set({ [domain]: newSettings });
     }
@@ -58,6 +125,15 @@ const App: React.FC = () => {
       chrome.action.setBadgeBackgroundColor({ color: newSettings.enabled ? '#3b82f6' : '#64748b', tabId });
     }
   }, [domain, tabId, sendMessage]);
+
+  // Debounced version for slider changes
+  const debouncedPersistAndSend = useDebounce(persistAndSend, 150);
+
+  // Full update (non-debounced) — for toggles, theme changes
+  const updateAndPersist = useCallback((newSettings: SiteSettings) => {
+    setSiteSettings(newSettings);
+    persistAndSend(newSettings);
+  }, [persistAndSend]);
 
   // Toggle dark mode for this site
   const handleToggle = () => {
@@ -98,25 +174,81 @@ const App: React.FC = () => {
     updateAndPersist(newSettings);
   };
 
-  // Slider changes
-  const handleBrightness = (val: number) => {
-    const newSettings = { ...siteSettings, brightness: val };
-    updateAndPersist(newSettings);
+  // Slider changes — immediate visual update, debounced persist
+  const handleSliderChange = (key: 'brightness' | 'contrast' | 'sepia', val: number) => {
+    const newSettings = { ...siteSettings, [key]: val };
+    setSiteSettings(newSettings);
+    debouncedPersistAndSend(newSettings);
   };
 
-  const handleContrast = (val: number) => {
-    const newSettings = { ...siteSettings, contrast: val };
-    updateAndPersist(newSettings);
+  // ---- Exclude List Handlers ----
+  const handleAddExclude = () => {
+    const pattern = excludeInput.trim().toLowerCase();
+    if (!pattern) return;
+    const newList = [...excludeList];
+    if (!newList.includes(pattern)) {
+      newList.push(pattern);
+      setExcludeList(newList);
+      chrome.storage.local.set({ [EXCLUDES_KEY]: newList });
+
+      // Check if current domain now matches
+      if (domain) {
+        const d = domain.toLowerCase();
+        if (pattern === d || matchesGlob(d, pattern)) {
+          setIsExcluded(true);
+          // Disable dark mode on this tab immediately
+          sendMessage({ type: 'TOGGLE_DARK_MODE', enabled: false, settings: { ...siteSettings, enabled: false } });
+        }
+      }
+    }
+    setExcludeInput('');
   };
 
-  const handleSepia = (val: number) => {
-    const newSettings = { ...siteSettings, sepia: val };
-    updateAndPersist(newSettings);
+  const handleRemoveExclude = (pattern: string) => {
+    const newList = excludeList.filter((p) => p !== pattern);
+    setExcludeList(newList);
+    chrome.storage.local.set({ [EXCLUDES_KEY]: newList });
+
+    // Re-check if domain is still excluded
+    if (domain) {
+      const d = domain.toLowerCase();
+      const stillExcluded = newList.some((p) => p === d || matchesGlob(d, p));
+      setIsExcluded(stillExcluded);
+    }
+  };
+
+  const handleQuickExclude = () => {
+    if (!domain) return;
+    const d = domain.toLowerCase();
+    if (!excludeList.includes(d)) {
+      const newList = [...excludeList, d];
+      setExcludeList(newList);
+      chrome.storage.local.set({ [EXCLUDES_KEY]: newList });
+      setIsExcluded(true);
+      sendMessage({ type: 'TOGGLE_DARK_MODE', enabled: false, settings: { ...siteSettings, enabled: false } });
+    }
+  };
+
+  // ---- Emergency Disable Handler ----
+  const handleTempDisable = () => {
+    chrome.runtime.sendMessage({ type: 'TEMP_DISABLE', domain } as MessagePayload, (response) => {
+      if (response?.success) {
+        setTempDisabled(true);
+        setTempRemainingMs(5 * 60 * 1000);
+      }
+    });
   };
 
   const truncateDomain = (d: string) => {
     if (d.length > 28) return d.substring(0, 25) + '...';
     return d;
+  };
+
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.ceil(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -128,6 +260,29 @@ const App: React.FC = () => {
       {!domain && (
         <div className="unsupported-notice">
           <span>⚠️ Dark mode is not available on this page.</span>
+        </div>
+      )}
+
+      {/* Excluded domain notice */}
+      {domain && isExcluded && (
+        <div className="excluded-notice">
+          <ShieldIcon size={14} />
+          <span>This site is in your exclude list.</span>
+          <button
+            className="excluded-remove-btn"
+            onClick={() => handleRemoveExclude(domain.toLowerCase())}
+            title="Remove from exclude list"
+          >
+            Remove
+          </button>
+        </div>
+      )}
+
+      {/* Temp-disable notice */}
+      {tempDisabled && (
+        <div className="temp-disable-notice">
+          <ClockIcon size={14} />
+          <span>Temporarily disabled — re-enables in {formatTime(tempRemainingMs)}</span>
         </div>
       )}
 
@@ -147,14 +302,37 @@ const App: React.FC = () => {
             <span className="header-domain">{truncateDomain(domain)}</span>
           </div>
         </div>
-        <button
-          className={`power-btn ${siteSettings.enabled ? 'active' : ''}`}
-          onClick={handleToggle}
-          title={siteSettings.enabled ? 'Disable dark mode' : 'Enable dark mode'}
-          disabled={!globalEnabled}
-        >
-          <PowerIcon size={18} />
-        </button>
+        <div className="header-actions">
+          {/* Emergency disable button */}
+          {domain && siteSettings.enabled && globalEnabled && !tempDisabled && !isExcluded && (
+            <button
+              className="temp-disable-btn"
+              onClick={handleTempDisable}
+              title="Disable on this page for 5 minutes"
+            >
+              <ClockIcon size={14} />
+              <span>5m</span>
+            </button>
+          )}
+          {/* Quick exclude button */}
+          {domain && !isExcluded && (
+            <button
+              className="quick-exclude-btn"
+              onClick={handleQuickExclude}
+              title="Exclude this site from dark mode"
+            >
+              <ShieldIcon size={14} />
+            </button>
+          )}
+          <button
+            className={`power-btn ${siteSettings.enabled ? 'active' : ''}`}
+            onClick={handleToggle}
+            title={siteSettings.enabled ? 'Disable dark mode' : 'Enable dark mode'}
+            disabled={!globalEnabled || isExcluded || tempDisabled}
+          >
+            <PowerIcon size={18} />
+          </button>
+        </div>
       </header>
 
       {/* Global Toggle */}
@@ -182,7 +360,7 @@ const App: React.FC = () => {
               className={`theme-card ${siteSettings.themeId === theme.id ? 'selected' : ''}`}
               onClick={() => handleThemeSelect(theme.id)}
               title={theme.description}
-              disabled={!globalEnabled}
+              disabled={!globalEnabled || isExcluded || tempDisabled}
             >
               <div
                 className="theme-preview"
@@ -219,9 +397,9 @@ const App: React.FC = () => {
             min="50"
             max="150"
             value={siteSettings.brightness}
-            onChange={(e) => handleBrightness(Number(e.target.value))}
+            onChange={(e) => handleSliderChange('brightness', Number(e.target.value))}
             className="custom-slider"
-            disabled={!globalEnabled || !siteSettings.enabled}
+            disabled={!globalEnabled || !siteSettings.enabled || isExcluded || tempDisabled}
           />
         </div>
 
@@ -235,9 +413,9 @@ const App: React.FC = () => {
             min="50"
             max="150"
             value={siteSettings.contrast}
-            onChange={(e) => handleContrast(Number(e.target.value))}
+            onChange={(e) => handleSliderChange('contrast', Number(e.target.value))}
             className="custom-slider"
-            disabled={!globalEnabled || !siteSettings.enabled}
+            disabled={!globalEnabled || !siteSettings.enabled || isExcluded || tempDisabled}
           />
         </div>
 
@@ -251,11 +429,51 @@ const App: React.FC = () => {
             min="0"
             max="100"
             value={siteSettings.sepia}
-            onChange={(e) => handleSepia(Number(e.target.value))}
+            onChange={(e) => handleSliderChange('sepia', Number(e.target.value))}
             className="custom-slider"
-            disabled={!globalEnabled || !siteSettings.enabled}
+            disabled={!globalEnabled || !siteSettings.enabled || isExcluded || tempDisabled}
           />
         </div>
+      </div>
+
+      {/* Exclude List */}
+      <div className="section">
+        <div className="section-title">
+          <ShieldIcon size={14} />
+          Excluded Sites
+        </div>
+        <div className="exclude-input-row">
+          <input
+            type="text"
+            className="exclude-input"
+            placeholder="e.g. *.docs.google.com"
+            value={excludeInput}
+            onChange={(e) => setExcludeInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddExclude()}
+          />
+          <button className="exclude-add-btn" onClick={handleAddExclude} title="Add pattern">
+            <PlusIcon size={14} />
+          </button>
+        </div>
+        {excludeList.length > 0 && (
+          <div className="exclude-chips">
+            {excludeList.map((pattern) => (
+              <div key={pattern} className="exclude-chip">
+                <span>{pattern}</span>
+                <button
+                  className="exclude-chip-remove"
+                  onClick={() => handleRemoveExclude(pattern)}
+                  title="Remove"
+                >
+                  <XIcon size={10} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {excludeList.length === 0 && (
+          <div className="exclude-empty">No excluded sites yet</div>
+        )}
       </div>
 
       {/* Footer */}
@@ -268,5 +486,14 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+// Helper: check if domain matches a glob pattern
+function matchesGlob(domain: string, pattern: string): boolean {
+  const escaped = pattern
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/\\\*/g, '\\*');
+  const regex = new RegExp('^' + escaped.replace(/\*/g, '.*') + '$');
+  return regex.test(domain);
+}
 
 export default App;

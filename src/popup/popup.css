@@ -476,3 +476,199 @@ kbd {
 .section:nth-child(3) { animation-delay: 0.1s; }
 .section:nth-child(4) { animation-delay: 0.15s; }
 .popup-footer { animation-delay: 0.2s; }
+
+/* ---- Header Actions Row ---- */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.temp-disable-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.temp-disable-btn:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: scale(1.03);
+}
+
+.quick-exclude-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(148, 163, 184, 0.15);
+  background: rgba(30, 41, 59, 0.5);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.quick-exclude-btn:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  transform: scale(1.05);
+}
+
+/* ---- Notice Banners ---- */
+.excluded-notice {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(239, 68, 68, 0.06);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.12);
+  font-size: 12px;
+  color: #f87171;
+  font-weight: 500;
+  animation: fadeIn 0.35s ease both;
+}
+
+.excluded-remove-btn {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.excluded-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.temp-disable-notice {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(245, 158, 11, 0.06);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.12);
+  font-size: 12px;
+  color: #fbbf24;
+  font-weight: 500;
+  animation: fadeIn 0.35s ease both;
+}
+
+/* ---- Exclude List Section ---- */
+.exclude-input-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.exclude-input {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.exclude-input::placeholder {
+  color: var(--text-muted);
+}
+
+.exclude-input:focus {
+  border-color: var(--border-active);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.1);
+}
+
+.exclude-add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--accent-indigo);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.exclude-add-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--border-active);
+  transform: scale(1.05);
+}
+
+.exclude-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.exclude-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.12);
+  font-size: 11px;
+  color: #f87171;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease both;
+}
+
+.exclude-chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.exclude-chip-remove:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: scale(1.1);
+}
+
+.exclude-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 0;
+}
