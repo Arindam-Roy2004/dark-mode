@@ -32,11 +32,13 @@ export interface GlobalSettings {
 }
 
 export interface MessagePayload {
-  type: 'TOGGLE_DARK_MODE' | 'SET_THEME' | 'UPDATE_SETTINGS' | 'GET_STATUS' | 'STATUS_RESPONSE';
+  type: 'TOGGLE_DARK_MODE' | 'SET_THEME' | 'UPDATE_SETTINGS' | 'GET_STATUS' | 'STATUS_RESPONSE' | 'TEMP_DISABLE' | 'TEMP_DISABLE_STATUS';
   enabled?: boolean;
   themeId?: string;
   settings?: SiteSettings;
   domain?: string;
+  tempDisabled?: boolean;
+  remainingMs?: number;
 }
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
@@ -54,3 +56,6 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   defaultContrast: 100,
   defaultSepia: 0,
 };
+
+export const EXCLUDES_KEY = '__dark_mode_excludes__';
+export const TEMP_DISABLE_PREFIX = 'temp-disable-';
